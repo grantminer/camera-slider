@@ -24,6 +24,8 @@ int buttonState2 = 1;
 int lastButtonState1 = 1;
 int lastButtonState2 = 1;
 
+const int ledPin = 13;
+
 void setup() {
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
@@ -43,6 +45,8 @@ void setup() {
   pinMode(b2, INPUT);
 
   lcd.clear();
+
+  pinMode(ledPin, OUTPUT);
 }
 
 void loop() {
@@ -98,6 +102,9 @@ void loop() {
     //button has been pressed, released and pressed again
     if (millis() - lastButtonPress > 50) {
       Serial.println("Button pressed!");
+      digitalWrite(ledPin, HIGH);
+      delay(3000);
+      digitalWrite(ledPin, LOW);
     }
 
     // Remember last button press event
