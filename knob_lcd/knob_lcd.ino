@@ -1,7 +1,7 @@
 #include <LiquidCrystal.h>
-#define CLK A8
-#define DT A9
-#define SW A10
+#define CLK 8
+#define DT 9
+#define SW 10
 
 const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
@@ -102,9 +102,9 @@ void loop() {
     //button has been pressed, released and pressed again
     if (millis() - lastButtonPress > 50) {
       Serial.println("Button pressed!");
-      digitalWrite(ledPin, HIGH);
-      delay(3000);
-      digitalWrite(ledPin, LOW);
+     digitalWrite(ledPin, HIGH);
+     delay(1000);
+     digitalWrite(ledPin, LOW);
     }
 
     // Remember last button press event
@@ -156,16 +156,6 @@ lcd.print("Position: ");
 lcd.setCursor(11,1);
 lcd.print(positioncounter);
 lcd.print(" ");
-
-
- /* if (currentDir != lastDir) {
-    lcd.print("Direction: ");
-    lcd.setCursor(11,0);
-    lcd.print(currentDir + " ");
-  } else {
-  // print the number of seconds since reset:
-  lcd.setCursor(11, 0);
-  lcd.print(currentDir); } */
   
 
   // Put in a slight delay to help debounce the reading
