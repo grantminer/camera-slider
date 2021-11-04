@@ -2,6 +2,9 @@
 #define CLK 8
 #define DT 9
 #define SW 10
+#define dirPin 22
+#define stepPin 23
+#define stepsPerRevolution 200
 
 const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
@@ -24,6 +27,8 @@ int buttonState2 = 1;
 int lastButtonState1 = 1;
 int lastButtonState2 = 1;
 
+int microDelay = 500;
+
 const int ledPin = 13;
 
 void setup() {
@@ -36,6 +41,8 @@ void setup() {
   pinMode(CLK,INPUT);
   pinMode(DT,INPUT);
   pinMode(SW, INPUT_PULLUP);
+  pinMode(stepPin, OUTPUT);
+  pinMode(dirPin, OUTPUT);
   // Setup Serial Monitor
   Serial.begin(9600);
   // Read the initial state of CLK
@@ -101,10 +108,29 @@ void loop() {
     //if 50ms have passed since last LOW pulse, it means that the
     //button has been pressed, released and pressed again
     if (millis() - lastButtonPress > 50) {
-      Serial.println("Button pressed!");
-     digitalWrite(ledPin, HIGH);
-     delay(1000);
-     digitalWrite(ledPin, LOW);
+       Serial.println("Button pressed!");
+       digitalWrite(ledPin, HIGH);
+//       delay(1000);
+
+       findDelay();
+  
+       digitalWrite(dirPin, LOW);
+       for (int i = 0; i < stepsPerRevolution; i ++) {
+        digitalWrite(stepPin, HIGH);
+        delayMicroseconds(microDelay);
+        digitalWrite(stepPin, LOW);
+        delayMicroseconds(microDelay);
+       }
+  
+       delay(500);
+       digitalWrite(dirPin, HIGH);
+       for (int i = 0; i < stepsPerRevolution; i ++) {
+        digitalWrite(stepPin, HIGH);
+        delayMicroseconds(microDelay);
+        digitalWrite(stepPin, LOW);
+        delayMicroseconds(microDelay);
+       }
+       digitalWrite(ledPin, LOW);
     }
 
     // Remember last button press event
@@ -160,4 +186,11 @@ lcd.print(" ");
 
   // Put in a slight delay to help debounce the reading
   delay(1);
+}
+
+void findDelay() {
+  microDelay = 2000 - (speedcounter*100);
+  if (microDelay < 1000) {
+    microDelay = 1000;
+  }
 }
