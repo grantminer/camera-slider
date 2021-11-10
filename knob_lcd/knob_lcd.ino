@@ -9,6 +9,7 @@
 const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
+int revsOnTrack = 1;
 int speedcounter = 10;
 int positioncounter = 5;
 int currentStateCLK;
@@ -26,6 +27,10 @@ int buttonState1 = 1;
 int buttonState2 = 1;
 int lastButtonState1 = 1;
 int lastButtonState2 = 1;
+int totalSteps = revsOnTrack*stepsPerRevolution;
+float startPosition;
+float initial;
+int goTo;
 
 int microDelay = 500;
 
@@ -113,9 +118,10 @@ void loop() {
 //       delay(1000);
 
        findDelay();
+       startPos();
   
        digitalWrite(dirPin, LOW);
-       for (int i = 0; i < stepsPerRevolution; i ++) {
+       for (int i = 0; i < totalSteps - goTo; i ++) {
         digitalWrite(stepPin, HIGH);
         delayMicroseconds(microDelay);
         digitalWrite(stepPin, LOW);
@@ -192,5 +198,18 @@ void findDelay() {
   microDelay = 2000 - (speedcounter*100);
   if (microDelay < 1000) {
     microDelay = 1000;
+  }
+}
+
+void startPos() {
+  startPosition = positioncounter / 10;
+  initial = startPosition * revsOnTrack;
+  goTo = floor(initial * stepsPerRevolution);
+  digitalWrite(dirPin, LOW);
+  for (int i = 0; i < goTo; i ++) {
+    digitalWrite(stepPin, HIGH);
+    delayMicroseconds(1000);
+    digitalWrite(stepPin, LOW);
+    delayMicroseconds(1000);
   }
 }
