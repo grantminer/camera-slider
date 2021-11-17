@@ -1,5 +1,6 @@
 #define dirPin 2
 #define stepPin 3
+#define configPin 4
 #define stepsPerRevolution 200
 
 int revsOnTrack = 16;
@@ -10,13 +11,29 @@ int goTo;
 int speedCounter = 10;
 int positionCounter = 20;
 int microDelay;
+bool buttonPressed;
+unsigned long lastDebounceTime = 0;
+unsigned long debounceDelay = 50;
+int buttonState;
+int lastButtonState = LOW;
+
 
 void setup() {
     pinMode(stepPin, OUTPUT);
     pinMode(dirPin, OUTPUT);
+    pinMode(configPin, INPUT);
 
     Serial.begin(9600);
     goTo = revsOnTrack*stepsPerRevolution;
+
+    digitalWrite(dirPin, HIGH);
+    while (!buttonPressed) {
+        digitalWrite(stepPin, HIGH);
+        delayMicroseconds(1000);
+        digitalWrite(stepPin, LOW);
+        delayMicroseconds(1000);
+        buttonPress();
+    }
 }
 
 void loop() {
@@ -34,6 +51,7 @@ void loop() {
 
     delay(2000);
     digitalWrite(dirPin, HIGH);
+
     for (int i = 0; i < goTo; i ++) {
     digitalWrite(stepPin, HIGH);
     delayMicroseconds(microDelay);
@@ -98,4 +116,24 @@ void findDelay() {
       positionCounter = atoi(strtokIndx);
     }
     }
+}
+
+void buttonPress() {
+    int reading = digitalRead(configPin);
+
+    if (reading != lastButtonState) {
+        lastDebounceTime = millis();
+    }
+
+    if (millis() - lastDebounceTime > debounceDelay) {
+        if (reading != buttonState) {
+            buttonState = reading;
+
+        if (buttonState) {
+            buttonPressed = 1;
+        }
+        }
+    }
+
+    lastButtonState = reading;
 }
