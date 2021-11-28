@@ -2,6 +2,7 @@
 #define stepPin 3
 #define configPin 4
 #define stepsPerRevolution 200
+#include "SpeedyStepper.h"
 
 int revsOnTrack = 16;
 int totalSteps = revsOnTrack*stepsPerRevolution;
