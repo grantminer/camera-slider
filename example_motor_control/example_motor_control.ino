@@ -3,6 +3,7 @@
 #define dirPin 2
 #define stepPin 3
 #define stepsPerRevolution 200
+#include "SpeedyStepper.h"
 void setup() {
   // Declare pins as output:
   pinMode(stepPin, OUTPUT);

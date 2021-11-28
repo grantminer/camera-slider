@@ -26,18 +26,20 @@ void setup() {
     Serial.begin(9600);
     goTo = revsOnTrack*stepsPerRevolution;
 
-    digitalWrite(dirPin, HIGH);
-    while (!buttonPressed) {
-        digitalWrite(stepPin, HIGH);
-        delayMicroseconds(1000);
-        digitalWrite(stepPin, LOW);
-        delayMicroseconds(1000);
-        buttonPress();
-    }
+//    delay(5000);
+//
+//    digitalWrite(dirPin, HIGH);
+//    while (!buttonPressed) {
+//        digitalWrite(stepPin, HIGH);
+//        delayMicroseconds(1000);
+//        digitalWrite(stepPin, LOW);
+//        delayMicroseconds(1000);
+//        buttonPress();
+//    }
 }
 
 void loop() {
-    readVals();
+    // readVals();
     findDelay();
     startPos();
   
