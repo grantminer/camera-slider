@@ -28,7 +28,7 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 #define YELLOW  0xFFE0
 #define WHITE   0xFFFF
 
-#define Slider_X 100
+#define Slider_X 75
 #define Slider_Y 50
 #define Slider_W 5
 #define Slider_H 155
@@ -37,8 +37,9 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 #define Thumb_H 25
 #define Thumb_X Slider_X - Thumb_W/2 + 2
 #define initThumb_Y 125
+#define Thumb_RAD 7
 
-#define Slider_X_2 175
+#define Slider_X_2 150
 #define Slider_Y_2 50
 #define Slider_W_2 5
 #define Slider_H_2 155
@@ -47,6 +48,20 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 #define Thumb_H_2 25
 #define Thumb_X_2 Slider_X_2 - Thumb_W_2/2 + 2
 #define initThumb_Y_2 125
+#define Thumb_RAD_2 7
+
+/*
+#define Start_W 200
+#define Start_H 40
+#define Start_X 60
+#define Start_Y 190
+#define Start_RAD 10*/
+
+#define Start_W 40
+#define Start_H 200
+#define Start_X 190
+#define Start_Y 60
+#define Start_RAD 10
 
  TS_Point p;
  int x, y, y1;
@@ -67,10 +82,14 @@ void showSliderValue(int value)
 {
  sprintf(sliderValueStr,"%03d",value);
  tft.setRotation(1);
- tft.setCursor(30,92);
- tft.setTextColor(WHITE, BLUE);
- tft.setTextSize(3);
+ tft.setCursor(280,70);
+ tft.setTextColor(WHITE, BLACK);
+ tft.setTextSize(2);
  tft.print(sliderValueStr);
+ tft.setCursor(10, 70);
+ tft.setTextColor(WHITE, BLACK);
+ tft.setTextSize(2);
+ tft.print("Speed");
  tft.setRotation(2);
 }
 
@@ -78,10 +97,14 @@ void showSliderValue2(int value2)
 {
  sprintf(sliderValueStr2,"%03d",value2);
  tft.setRotation(1);
- tft.setCursor(30,175-8);
- tft.setTextColor(RED, BLUE);
- tft.setTextSize(3);
+ tft.setCursor(280,150-6);
+ tft.setTextColor(WHITE, BLACK);
+ tft.setTextSize(2);
  tft.print(sliderValueStr2);
+ tft.setCursor(10, 150-6);
+ tft.setTextColor(WHITE, BLACK);
+ tft.setTextSize(2);
+ tft.print("Distance");
  tft.setRotation(2);
 }
 
@@ -90,9 +113,9 @@ void sliderHandler() {
  if (sliderValue < 0) sliderValue = 0;
  showSliderValue(sliderValue);
  // erase previous thumb by redrawing with background color
- tft.drawRect(Thumb_X, y1, Thumb_W, Thumb_H, BLUE);
+ tft.drawRoundRect(Thumb_X, y1, Thumb_W, Thumb_H, Thumb_RAD, BLACK);
  // then draw new thumb
- tft.drawRect(Thumb_X, y, Thumb_W, Thumb_H, WHITE);
+ tft.drawRoundRect(Thumb_X, y, Thumb_W, Thumb_H, Thumb_RAD, WHITE);
  tft.fillRoundRect(Slider_X, Slider_Y, Slider_W, Slider_H, 2, WHITE);
 }
 
@@ -101,10 +124,32 @@ sliderValue2 = ((tft.height() - y_2) - (tft.height()-(Slider_Y_2+Slider_H_2-Thum
  if (sliderValue2 < 0) sliderValue2 = 0;
  showSliderValue2(sliderValue2);
  // erase previous thumb by redrawing with background color
- tft.drawRect(Thumb_X_2, y1_2, Thumb_W_2, Thumb_H_2, BLUE);
+ tft.drawRoundRect(Thumb_X_2, y1_2, Thumb_W_2, Thumb_H_2, Thumb_RAD_2, BLACK);
+// tft.drawCircle(Thumb_X_2, Thumb_W_2, y1_2, BLACK);
  // then draw new thumb
- tft.drawRect(Thumb_X_2, y_2, Thumb_W_2, Thumb_H_2, RED);
+ tft.drawRoundRect(Thumb_X_2, y_2, Thumb_W_2, Thumb_H_2, Thumb_RAD_2, WHITE);
+// tft.drawCircle(Thumb_X_2, Thumb_W_2, y1_2, WHITE);
  tft.fillRoundRect(Slider_X_2, Slider_Y_2, Slider_W_2, Slider_H_2, 2, WHITE);
+}
+
+void startButton() {
+  //tft.setRotation(1);
+  tft.fillRoundRect(Start_X, Start_Y, Start_W, Start_H, Start_RAD, GREEN);
+  /*(tft.setCursor(Start_X+40, Start_Y+5);
+  tft.setTextColor(BLACK, GREEN);
+  tft.setTextSize(4);
+  tft.print("Start");
+  tft.setRotation(2);*/
+}
+
+void startButton2() {
+  //tft.setRotation(1);
+  tft.fillRoundRect(Start_X, Start_Y, Start_W, Start_H, Start_RAD, RED);
+  /*tft.setCursor(Start_X+40, Start_Y+5);
+  tft.setTextColor(BLACK, RED);
+  tft.setTextSize(4);
+  tft.print("Start");
+  tft.setRotation(2);*/
 }
 
 void setup() {
@@ -114,7 +159,14 @@ void setup() {
   while (1);
  }
  tft.setRotation(rotation);
- tft.fillScreen(BLUE);
+ tft.fillScreen(BLACK);
+
+ tft.setRotation(1);
+ tft.setCursor(50, 10);
+ tft.setTextColor(WHITE, BLACK);
+ tft.setTextSize(3);
+ tft.print("Settings");
+ tft.setRotation(2);
  
  Thumb_Y = initThumb_Y;
  y = Thumb_Y + Thumb_H/2;
@@ -125,6 +177,8 @@ void setup() {
  y_2 = Thumb_Y_2 + Thumb_H_2/2;
  y1_2 = y_2;
  sliderHandler2();
+
+ startButton();
 
  Serial.begin(9600);
 
@@ -163,10 +217,16 @@ void loop() {
    y_2 = 240 - p.x;
   break;
   }
-   
+
+  if((x > Start_X) && (x < (Start_X + Start_W)) && (y > Start_Y) && (y <= (Start_Y + Start_H))) {
+    //if (state == SETTINGS) {
+      //state = RUN;
+      startButton2();
+      //delay(500);
+    }
+  
    Thumb_Y = y - Thumb_H/2;
    if(x > Thumb_X && x < (Thumb_X + Thumb_W)) {
-    Serial.print('k');
      if(y > Thumb_Y && y < (Thumb_Y + Thumb_H)) {
        if(Thumb_Y < Slider_Y){
          y =  Slider_Y;
@@ -181,7 +241,6 @@ void loop() {
 
    Thumb_Y_2 = y_2 - Thumb_H_2/2;
    if(x_2 > Thumb_X_2 && x_2 < (Thumb_X_2 + Thumb_W_2)) {
-    Serial.print('l');
      if(y_2 > Thumb_Y_2 && y_2 < (Thumb_Y_2 + Thumb_H_2)) {
        if(Thumb_Y_2 < Slider_Y_2){
          y_2 =  Slider_Y_2;
