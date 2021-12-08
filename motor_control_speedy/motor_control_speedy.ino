@@ -9,27 +9,30 @@ SpeedyStepper panStepper;
 //#define stepPin2 5
 #define LIMIT_SWITCH_PIN 6
 
-int maxRevs = 16;
+int maxDist = 1.5; // Meters
 
 int speedCounterTranslate = 10;
 int positionCounterTranslate = 20;
 int maxPosition = 100;
 bool homed = false;
-//int speedCounterPan = 5;
-//int positionCounterPan = 1;
+int speedCounterPan = 5;
+int positionCounterPan = 1;
 
 void setup() {
   // put your setup code here, to run once:
 
+  if (speedCounterPan >= 1) {speedCounterPan = 1;}
+  if (speedCounterTranslate >= 
+
   translateStepper.connectToPins(stepPin1, dirPin1);
-//  panStepper.connectToPins(stepPin2, dirPin2);
+  panStepper.connectToPins(stepPin2, dirPin2);
   pinMode(LIMIT_SWITCH_PIN, INPUT_PULLUP);
-  translateStepper.setStepsPerRevolution(1600);
+  translateStepper.setStepsPerMillimeter(0.04);
   translateStepper.setAccelerationInRevolutionsPerSecondPerSecond(1);
   translateStepper.setSpeedInRevolutionsPerSecond(speedCounterTranslate/10);
-//  panStepper.setSpeedInRevolutionsPerSecond(speedCounterPan/10);
+  panStepper.setSpeedInRevolutionsPerSecond(speedCounterPan*4);
 
-  Serial.println(translateStepper.getCurrentPositionInRevolutions());
+  Serial.println(translateStepper.getCurrentPositionInMillimeters()*1000);
   
 }
 
@@ -43,11 +46,11 @@ void loop() {
 //
 //while(true){}
 
-  translateStepper.setupMoveInRevolutions((positionCounterTranslate/maxPosition)*maxRevs);
-//  panStepper.setupRelativeMoveInRevolutions(0.5);
+  translateStepper.setupMoveInMillimeters((positionCounterTranslate/maxPosition)*maxRevs*1000);
+  panStepper.setupRelativeMoveInRevolutions((positionCounterPan/90));
 
   while((!translateStepper.motionComplete()) || (!panStepper.motionComplete())) {
-    Serial.println(translateStepper.getCurrentPositionInRevolutions());
+    Serial.println(translateStepper.getCurrentPositionInMillimeters()*1000);
     translateStepper.processMovement();
     panStepper.processMovement();
     homed = false;
