@@ -151,7 +151,7 @@ SpeedyStepper panStepper;
 
 int maxTranslatePosition = 1150;
 int maxPanPosition = 180;
-int maxTranslateSpeed = 200;
+int maxTranslateSpeed = 500;
 int maxPanSpeed = 360;
 bool homed = false;
 
@@ -161,6 +161,10 @@ float speedCounterTranslate;
 float positionCounterTranslate;
 float speedCounterPan;
 float positionCounterPan;
+
+#define cameraPin 8
+#define sleepPin1 46
+#define sleepPin2 47
 
 void startup(){
   tft.fillScreen(ILI9341_BLACK); //clears screen
@@ -174,7 +178,7 @@ void startup(){
   tft.setCursor(87, 50);
   tft.println("Camera Slider");
   tft.setCursor(50, 65);
-  tft.println("Touch to continue...");
+  tft.println("Touch to home...");
 }
 
 
@@ -224,7 +228,7 @@ void showSliderValue(int value1) {
   tft.setCursor(10, 90);
   tft.setTextColor(WHITE, BLACK);
   tft.setTextSize(2);
-  tft.print("(cm/s)");
+  tft.print("(mm/s)");
   //tft.setRotation(2);
   sliderValue_store1 = value1;
 }
@@ -440,6 +444,60 @@ void roundPanValues() {
   roundedPanPosition = round((sliderValue_store4/360.0)*40)/10.0;
 }
 
+void prepSteppers() {
+  wakeUp();
+  
+  speedCounterTranslate = sliderValue_store1;
+  positionCounterTranslate = sliderValue_store2*10;
+
+  speedCounterPan = sliderValue_store3;
+  positionCounterPan = sliderValue_store4;
+  
+  if (speedCounterPan >= maxPanSpeed) {speedCounterPan = maxPanSpeed;}
+  if (speedCounterTranslate >= maxTranslateSpeed) {speedCounterTranslate = maxTranslateSpeed;}
+
+  if (positionCounterTranslate >= maxTranslatePosition) {positionCounterTranslate = maxTranslatePosition;}
+  if (positionCounterPan >= maxPanPosition) {positionCounterPan = maxPanPosition;}
+
+  roundPanValues();
+  translateStepper.setSpeedInMillimetersPerSecond(speedCounterTranslate);
+  panStepper.setSpeedInRevolutionsPerSecond(roundedPanSpeed);
+  
+  translateStepper.setupMoveInMillimeters(positionCounterTranslate);
+  panStepper.setupMoveInRevolutions(roundedPanPosition);
+
+  digitalWrite(cameraPin, HIGH);
+  delay(100);
+  digitalWrite(cameraPin, LOW);
+}
+
+void runSteppers() {
+  if ((!translateStepper.motionComplete()) || (!panStepper.motionComplete())) {
+    translateStepper.processMovement();
+    panStepper.processMovement();
+    homed = false;
+  }
+}
+
+void wakeUp() {
+  digitalWrite(sleepPin1, HIGH);
+  digitalWrite(sleepPin2, HIGH);
+}
+
+void toSleep() {
+  digitalWrite(sleepPin1, LOW);
+  digitalWrite(sleepPin2, LOW);
+}
+
+void homing() {
+  wakeUp();
+  delay(100);
+  translateStepper.moveToHomeInMillimeters(-1, 75, 1300, LIMIT_SWITCH_PIN_TRANSLATE);
+  panStepper.moveToHomeInRevolutions(-1, 0.2, 2, LIMIT_SWITCH_PIN_PAN);
+  homed = true;
+  toSleep();
+}
+
 void setup() {
   tft.begin();
   if (! ctp.begin()) {  // pass in 'sensitivity' coefficient
@@ -453,23 +511,34 @@ void setup() {
   
   pinMode(LIMIT_SWITCH_PIN_PAN, INPUT_PULLUP);
   pinMode(LIMIT_SWITCH_PIN_TRANSLATE, INPUT_PULLUP);
+  pinMode(sleepPin1, OUTPUT);
+  pinMode(sleepPin2, OUTPUT);
   
   translateStepper.setStepsPerMillimeter(20);
-  translateStepper.setAccelerationInMillimetersPerSecondPerSecond(100);
+  translateStepper.setAccelerationInMillimetersPerSecondPerSecond(200);
 
   panStepper.setStepsPerRevolution(1600);
   panStepper.setAccelerationInRevolutionsPerSecondPerSecond(0.2);
 
+  digitalWrite(sleepPin1, LOW);
+  digitalWrite(sleepPin2, LOW);
+
   Serial.begin(9600);
+
+  pinMode(cameraPin, OUTPUT);
 
 }
 
 void loop() {
+  while (wscreen == 3 && !ctp.touched()) {
+    runSteppers();
+  }
   if (!ctp.touched()) { 
     return;
   }
   Serial.println(sliderValue_store1);
   if (wscreen == 0) {
+    homing();
     settings();
   }
   p = ctp.getPoint();
@@ -509,52 +578,28 @@ void loop() {
     setpan();
     } else if (wscreen == 2) {
       runscreen();
-
-      speedCounterTranslate = sliderValue_store1*10.0;
-      positionCounterTranslate = sliderValue_store2*10.0;
-
-      speedCounterPan = sliderValue_store3;
-      positionCounterPan = sliderValue_store4;
-      
-      if (speedCounterPan >= maxPanSpeed) {speedCounterPan = maxPanSpeed;}
-      if (speedCounterTranslate >= maxTranslateSpeed) {speedCounterTranslate = maxTranslateSpeed;}
-    
-      if (positionCounterTranslate >= maxTranslatePosition) {positionCounterTranslate = maxTranslatePosition;}
-      if (positionCounterPan >= maxPanPosition) {positionCounterPan = maxPanPosition;}
-
-      roundPanValues();
-      translateStepper.setSpeedInMillimetersPerSecond(speedCounterTranslate);
-      panStepper.setSpeedInRevolutionsPerSecond(roundedPanSpeed);
-      
-      translateStepper.setupMoveInMillimeters(positionCounterTranslate);
-      panStepper.setupMoveInRevolutions(roundedPanPosition);
-
-      if ((!translateStepper.motionComplete()) || (!panStepper.motionComplete())) {
-        translateStepper.processMovement();
-        panStepper.processMovement();
-        homed = false;
-      }
+      prepSteppers();
     }
   }
-  if ((wscreen == 3) && !((x > BUTTON_X) && (x < (BUTTON_X + BUTTON_W)) && (y > BUTTON_Y) && (y <= (BUTTON_Y + BUTTON_H)))) {
-    if ((!translateStepper.motionComplete()) || (!panStepper.motionComplete())) {
-        translateStepper.processMovement();
-        panStepper.processMovement();
-    } else if ((translateStepper.motionComplete()) && (panStepper.motionComplete())) {
-      wscreen == 4;
-    }
-  }
+//  if ((wscreen == 3) && !((x > BUTTON_X) && (x < (BUTTON_X + BUTTON_W)) && (y > BUTTON_Y) && (y <= (BUTTON_Y + BUTTON_H)))) {
+//    if ((!translateStepper.motionComplete()) || (!panStepper.motionComplete())) {
+//        translateStepper.processMovement();
+//        panStepper.processMovement();
+//    } else if ((translateStepper.motionComplete()) && (panStepper.motionComplete())) {
+//      digitalWrite(cameraPin, HIGH);
+//      delay(100);
+//      digitalWrite(cameraPin, LOW);
+//      wscreen == 4;
+//    }
+//  }
   if ((x > BUTTON_X) && (x < (BUTTON_X + BUTTON_W)) && (y > BUTTON_Y) && (y <= (BUTTON_Y + BUTTON_H))) {
     if (wscreen == 3) {
+      toSleep();
       stopscreen();
     } else if (wscreen == 4) {
-      settings();
+      homing();
       
-      if (!homed) {
-        translateStepper.moveToHomeInMillimeters(-1, 75, 1300, LIMIT_SWITCH_PIN_TRANSLATE);
-        panStepper.moveToHomeInRevolutions(-1, 0.1, 0.5, LIMIT_SWITCH_PIN_PAN);
-        homed = true;
-      }
+      settings();
     }
   }  
 
