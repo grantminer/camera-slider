@@ -152,7 +152,7 @@ SpeedyStepper panStepper;
 int maxTranslatePosition = 1150;
 int maxPanPosition = 180;
 int maxTranslateSpeed = 500;
-int maxPanSpeed = 90;
+int maxPanSpeed = 360;
 bool homed = false;
 
 float roundedPanSpeed;
@@ -292,12 +292,12 @@ void showSliderValue4(int value4) {
 
 void sliderHandler() {
   sliderValue = sliderValue_store1;
-  thumb_pos = (0.43333333*sliderValue_store1) + 115;
+  thumb_pos = (0.26*sliderValue_store1) + 115;
   tft.drawRoundRect(thumb_pos, Thumb_Y, Thumb_W, Thumb_H, Thumb_RAD, WHITE);
   tft.fillRoundRect(Slider_X, Slider_Y, Slider_W, Slider_H, 2, WHITE);
   
   if (ctp.touched()) {
-  sliderValue = ((tft.width() + x) - 435)/0.43333333;
+  sliderValue = ((tft.width() + x) - 435)*3.84615385;
   tft.drawRoundRect(thumb_pos, Thumb_Y, Thumb_W, Thumb_H, Thumb_RAD, BLACK);
   tft.drawRoundRect(x1, Thumb_Y, Thumb_W, Thumb_H, Thumb_RAD, BLACK);
   // then draw new thumb
@@ -306,7 +306,7 @@ void sliderHandler() {
   }
   
   if (sliderValue < 0) sliderValue = 0;
-  if (sliderValue > 300) sliderValue = 300;
+  if (sliderValue > 500) sliderValue = 500;
   showSliderValue(sliderValue);
   // erase previous thumb by redrawing with background color
 }
@@ -333,12 +333,12 @@ void sliderHandler2() {
 
 void sliderHandler3() {
   sliderValue3 = sliderValue_store3;
-  thumb_pos_3 = (1.38461538*sliderValue_store3) + 115;
+  thumb_pos_3 = (0.361111*sliderValue_store3) + 115;
   tft.drawRoundRect(thumb_pos_3, Thumb_Y_3, Thumb_W_3, Thumb_H_3, Thumb_RAD_3, WHITE);
   tft.fillRoundRect(Slider_X_3, Slider_Y_3, Slider_W_3, Slider_H_3, 2, WHITE);
   
   if (ctp.touched()) {
-  sliderValue3 = ((tft.width() + x_3) - 435)/1.38461538;
+  sliderValue3 = ((tft.width() + x_3) - 435)*2.76923077;
   tft.drawRoundRect(thumb_pos_3, Thumb_Y_3, Thumb_W_3, Thumb_H_3, Thumb_RAD_3, BLACK);
   tft.drawRoundRect(x1_3, Thumb_Y_3, Thumb_W_3, Thumb_H_3, Thumb_RAD_3, BLACK);
   // then draw new thumb
@@ -347,7 +347,7 @@ void sliderHandler3() {
   }
   
   if (sliderValue3 < 0) sliderValue3 = 0;
-  if (sliderValue3 > 90) sliderValue3 = 90;
+  if (sliderValue3 > 360) sliderValue3 = 360;
   showSliderValue3(sliderValue3);
 }
 
@@ -358,7 +358,7 @@ void sliderHandler4() {
   tft.fillRoundRect(Slider_X_4, Slider_Y_4, Slider_W_4, Slider_H_4, 2, WHITE);
   
   if (ctp.touched()) {
-  sliderValue4 = ((tft.width() + x_4) - 435)/0.722222;
+  sliderValue4 = ((tft.width() + x_4) - 435)*1.38461538;
   tft.drawRoundRect(thumb_pos_4, Thumb_Y_4, Thumb_W_4, Thumb_H_4, Thumb_RAD_4, BLACK);
   tft.drawRoundRect(x1_4, Thumb_Y_4, Thumb_W_4, Thumb_H_4, Thumb_RAD_4, BLACK);
   // then draw new thumb
@@ -491,13 +491,9 @@ void toSleep() {
 
 void homing() {
   wakeUp();
-  delay(100);
-  if (digitalRead(LIMIT_SWITCH_PIN_TRANSLATE) == HIGH){
-    translateStepper.moveToHomeInMillimeters(-1, 75, 1300, LIMIT_SWITCH_PIN_TRANSLATE);
-  }
-  if (digitalRead(LIMIT_SWITCH_PIN_PAN) == HIGH){
-    panStepper.moveToHomeInRevolutions(-1, 0.2, 2, LIMIT_SWITCH_PIN_PAN);
-  }
+  delay(200);
+  translateStepper.moveToHomeInMillimeters(-1, 75, 1300, LIMIT_SWITCH_PIN_TRANSLATE);
+  panStepper.moveToHomeInRevolutions(-1, 0.2, 2, LIMIT_SWITCH_PIN_PAN);
   homed = true;
   toSleep();
 }
@@ -519,10 +515,10 @@ void setup() {
   pinMode(sleepPin2, OUTPUT);
   
   translateStepper.setStepsPerMillimeter(20);
-  translateStepper.setAccelerationInMillimetersPerSecondPerSecond(75);
+  translateStepper.setAccelerationInMillimetersPerSecondPerSecond(100);
 
   panStepper.setStepsPerRevolution(1600);
-  panStepper.setAccelerationInRevolutionsPerSecondPerSecond(0.05);
+  panStepper.setAccelerationInRevolutionsPerSecondPerSecond(0.2);
 
   digitalWrite(sleepPin1, LOW);
   digitalWrite(sleepPin2, LOW);
@@ -536,15 +532,6 @@ void setup() {
 void loop() {
   while (wscreen == 3 && !ctp.touched()) {
     runSteppers();
-    if (translateStepper.motionComplete() && panStepper.motionComplete()) {
-      toSleep();
-      wscreen = 4;
-      digitalWrite(cameraPin, HIGH);
-      delay(100);
-      digitalWrite(cameraPin, LOW);
-      stopscreen();
-      break;
-    }
   }
   if (!ctp.touched()) { 
     return;
@@ -608,9 +595,6 @@ void loop() {
   if ((x > BUTTON_X) && (x < (BUTTON_X + BUTTON_W)) && (y > BUTTON_Y) && (y <= (BUTTON_Y + BUTTON_H))) {
     if (wscreen == 3) {
       toSleep();
-      digitalWrite(cameraPin, HIGH);
-      delay(100);
-      digitalWrite(cameraPin, LOW);
       stopscreen();
     } else if (wscreen == 4) {
       homing();
